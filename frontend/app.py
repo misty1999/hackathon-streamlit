@@ -3,13 +3,9 @@ import requests
 import json
 from datetime import datetime
 import os
-from dotenv import load_dotenv
 
-# 環境変数の読み込み
-load_dotenv()
-
-# APIのベースURL
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+# APIのベースURL（本番環境用）
+API_BASE_URL = "https://matching-app-demo.onrender.com"  # バックエンドのURLを直接指定
 
 # セッション状態の初期化
 if 'user_id' not in st.session_state:
