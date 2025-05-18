@@ -3,7 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
-import models
+import sys
+import os
+
+# バックエンドのルートディレクトリをPythonパスに追加
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from database import models
 from database import database
 from pydantic import BaseModel
 from passlib.context import CryptContext

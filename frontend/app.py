@@ -4,8 +4,8 @@ import json
 from datetime import datetime
 import os
 
-# APIのベースURL（本番環境用）
-API_BASE_URL = "https://matching-app-demo.onrender.com"  # バックエンドのURLを直接指定
+# APIのベースURL（開発環境用）
+API_BASE_URL = "http://localhost:8000"  # ローカル環境用に変更
 
 # セッション状態の初期化
 if 'user_id' not in st.session_state:
