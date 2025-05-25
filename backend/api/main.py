@@ -11,6 +11,7 @@ from core.config import (
     logger
 )
 from database import database
+from database.models import Base
 from api.middleware import log_requests
 from api.auth import router as auth_router
 from api.users import router as users_router
@@ -44,12 +45,11 @@ def init_db():
         try:
             # データベースの存在確認と作成
             if not database_exists(SQLALCHEMY_DATABASE_URL):
-                create_database(SQLALCHEMY_DATABASE_URL)
-                logger.info("データベースを作成しました")
+                create_database(SQLALCHEMY_DATABASE_URL)                     
+                Base.metadata.create_all(bind=engine)
+                logger.info("データベースの初期化が完了しました")
             else:
                 logger.info("データベースは既に存在します")
-            
-            logger.info("データベースの初期化が完了しました")
             
         except Exception as e:
             logger.error(f"データベース初期化中にエラーが発生: {str(e)}")
