@@ -11,9 +11,3 @@ services:
         value: sqlite:///./matching_app.db
     healthCheckPath: /docs
     autoDeploy: true
-
-databases:
-  - name: matching-app-db
-    databaseName: matching_app
-    user: matching_app_user
-    plan: free 
