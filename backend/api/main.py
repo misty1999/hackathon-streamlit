@@ -1,151 +1,67 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from typing import List, Optional
-from datetime import datetime
-import sys
-import os
+from sqlalchemy_utils import database_exists, create_database
 
-# バックエンドのルートディレクトリをPythonパスに追加
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from database import models
+from core.config import (
+    SQLALCHEMY_DATABASE_URL,
+    CORS_ORIGINS,
+    CORS_CREDENTIALS,
+    CORS_METHODS,
+    CORS_HEADERS,
+    logger
+)
 from database import database
-from pydantic import BaseModel
-from passlib.context import CryptContext
+from api.middleware import log_requests
+from api.auth import router as auth_router
+from api.users import router as users_router
+from api.matching import router as matching_router
 
 app = FastAPI(title="マッチングアプリ API")
+
+# ミドルウェアの設定
+app.middleware("http")(log_requests)
 
 # CORSの設定
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 本番環境では適切に制限してください
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=CORS_CREDENTIALS,
+    allow_methods=CORS_METHODS,
+    allow_headers=CORS_HEADERS,
 )
 
-# パスワードハッシュ化の設定
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# ルーターの登録
+app.include_router(auth_router, tags=["認証"])
+app.include_router(users_router, prefix="/users", tags=["ユーザー"])
+app.include_router(matching_router, tags=["マッチング"])
 
-# Pydanticモデル
-class UserBase(BaseModel):
-    username: str
-    email: str
-    age: int
-    gender: str
-    bio: Optional[str] = None
-    interests: Optional[str] = None
+def init_db():
+    """データベースの初期化"""
+    try:
+        engine = database.engine
+        connection = engine.connect()
+        
+        try:
+            # データベースの存在確認と作成
+            if not database_exists(SQLALCHEMY_DATABASE_URL):
+                create_database(SQLALCHEMY_DATABASE_URL)
+                logger.info("データベースを作成しました")
+            else:
+                logger.info("データベースは既に存在します")
+            
+            logger.info("データベースの初期化が完了しました")
+            
+        except Exception as e:
+            logger.error(f"データベース初期化中にエラーが発生: {str(e)}")
+            raise
+        finally:
+            connection.close()
+            
+    except Exception as e:
+        logger.error(f"データベース接続エラー: {str(e)}")
+        raise
 
-class UserCreate(UserBase):
-    password: str
-
-class User(UserBase):
-    id: int
-    profile_image_url: Optional[str] = None
-    created_at: datetime
-    is_active: bool
-
-    class Config:
-        orm_mode = True
-
-class LikeCreate(BaseModel):
-    to_user_id: int
-
-# ユーザー関連のエンドポイント
-@app.post("/users/", response_model=User)
-def create_user(user: UserCreate, db: Session = Depends(database.get_db)):
-    # ユーザー名とメールアドレスの重複チェック
-    db_user = db.query(models.User).filter(
-        (models.User.username == user.username) | 
-        (models.User.email == user.email)
-    ).first()
-    if db_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="ユーザー名またはメールアドレスが既に使用されています"
-        )
-    
-    # パスワードのハッシュ化
-    hashed_password = pwd_context.hash(user.password)
-    
-    # ユーザーの作成
-    db_user = models.User(
-        **user.dict(exclude={'password'}),
-        password_hash=hashed_password
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-@app.get("/users/", response_model=List[User])
-def get_users(
-    skip: int = 0,
-    limit: int = 10,
-    db: Session = Depends(database.get_db)
-):
-    users = db.query(models.User).offset(skip).limit(limit).all()
-    return users
-
-@app.get("/users/{user_id}", response_model=User)
-def get_user(user_id: int, db: Session = Depends(database.get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
-    return user
-
-# マッチング関連のエンドポイント
-@app.post("/likes/")
-def create_like(like: LikeCreate, from_user_id: int, db: Session = Depends(database.get_db)):
-    # 既存のいいねをチェック
-    existing_like = db.query(models.Like).filter(
-        models.Like.from_user_id == from_user_id,
-        models.Like.to_user_id == like.to_user_id
-    ).first()
-    
-    if existing_like:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="既にいいねを送っています"
-        )
-    
-    # 新しいいいねを作成
-    db_like = models.Like(from_user_id=from_user_id, to_user_id=like.to_user_id)
-    db.add(db_like)
-    
-    # マッチングのチェック
-    mutual_like = db.query(models.Like).filter(
-        models.Like.from_user_id == like.to_user_id,
-        models.Like.to_user_id == from_user_id
-    ).first()
-    
-    if mutual_like:
-        # マッチングを作成
-        db.execute(
-            models.matches.insert().values(
-                user_id_1=min(from_user_id, like.to_user_id),
-                user_id_2=max(from_user_id, like.to_user_id),
-                is_matched=True
-            )
-        )
-    
-    db.commit()
-    return {"message": "いいねを送信しました"}
-
-@app.get("/matches/{user_id}")
-def get_matches(user_id: int, db: Session = Depends(database.get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="ユーザーが見つかりません")
-    
-    return {
-        "matches": [
-            {
-                "user_id": match.id,
-                "username": match.username,
-                "profile_image_url": match.profile_image_url
-            }
-            for match in user.matches
-        ]
-    } 
+# アプリケーション起動時にデータベースを初期化
+@app.on_event("startup")
+async def startup_event():
+    init_db()

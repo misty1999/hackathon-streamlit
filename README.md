@@ -42,7 +42,7 @@ streamlit run app.py
 あなたの名前をここに書いてください！ 
 
 # バックエンド設定
-DATABASE_URL=sqlite:///./matching_app.db
+DATABASE_URL=mysql://root:password@localhost/matching_app
 SECRET_KEY=your-secret-key-here  # 本番環境では必ず変更してください！
 
 # フロントエンド設定

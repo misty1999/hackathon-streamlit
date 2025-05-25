@@ -1,0 +1,22 @@
+[theme]
+primaryColor = "#FF4B4B"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"
+
+[server]
+enableCORS = true
+enableXsrfProtection = true
+runOnSave = true  # ファイル保存時に自動リロード
+fileWatcherType = "poll"  # ファイル監視の方法
+maxUploadSize = 200  # 最大アップロードサイズ（MB）
+
+[browser]
+gatherUsageStats = false
+serverAddress = "localhost"
+serverPort = 8501
+
+[runner]
+fastReruns = true  # 高速リロードを有効化
+magicEnabled = true  # マジックコマンドを有効化 

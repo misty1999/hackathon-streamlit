@@ -9,13 +9,13 @@ load_dotenv()
 # データベースURLの設定
 SQLALCHEMY_DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "sqlite:///./matching_app.db"  # デフォルトはSQLite
+    "sqlite:///./matching_app.db"
 )
 
 # エンジンの作成
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False} if SQLALCHEMY_DATABASE_URL.startswith("sqlite") else {}
+    connect_args={"check_same_thread": False},  # SQLite用の設定
 )
 
 # セッションの作成
@@ -27,4 +27,4 @@ def get_db():
     try:
         yield db
     finally:
-        db.close() 
+        db.close()
