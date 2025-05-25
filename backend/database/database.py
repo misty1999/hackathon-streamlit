@@ -7,15 +7,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # データベースURLの設定
-SQLALCHEMY_DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "sqlite:///./matching_app.db"
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./matching_app.db")
+if DATABASE_URL.startswith("sqlite"):
+    # Render環境では/tmpディレクトリを使用
+    DATABASE_URL = "sqlite:////tmp/matching_app.db"
 
-# エンジンの作成
+# エンジンの作成（SQLite用）
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},  # SQLite用の設定
+    DATABASE_URL,
+    connect_args={"check_same_thread": False}  # SQLite用の設定
 )
 
 # セッションの作成
@@ -28,3 +28,6 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# ベースクラスの作成
+Base = declarative_base()

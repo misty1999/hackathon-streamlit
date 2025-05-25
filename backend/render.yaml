@@ -1,9 +1,9 @@
 services:
   - type: web
     name: matching-app-backend
-    env: python
+    runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    startCommand: gunicorn api.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
     envVars:
       - key: SECRET_KEY
         generateValue: true
@@ -13,7 +13,7 @@ services:
     autoDeploy: true
 
 databases:
-  - name: matching-app-mysql
+  - name: matching-app-db
     databaseName: matching_app
     user: matching_app_user
     plan: free 
