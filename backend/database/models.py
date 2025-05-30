@@ -4,6 +4,22 @@ from datetime import datetime
 
 Base = declarative_base()
 
+class Note(Base):
+    __tablename__ = 'notes'
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    content = Column(String(10000))  # マークダウン対応の本文
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    parent_id = Column(Integer, ForeignKey('notes.id'), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # リレーションシップ
+    user = relationship('User', back_populates='notes')
+    parent = relationship('Note', remote_side=[id], backref='children')
+
+
 # ユーザー間のマッチングを管理する中間テーブル
 matches = Table(
     'matches',
@@ -28,7 +44,10 @@ class User(Base):
     profile_image_url = Column(String(200))
     created_at = Column(DateTime, default=datetime.utcnow)
     is_active = Column(Boolean, default=True)
-
+    
+    # ノート
+    notes = relationship('Note', back_populates='user')
+    
     # マッチング関係
     matches = relationship(
         'User',
@@ -48,4 +67,4 @@ class Like(Base):
 
     # リレーションシップ
     from_user = relationship('User', foreign_keys=[from_user_id], backref='likes_sent')
-    to_user = relationship('User', foreign_keys=[to_user_id], backref='likes_received') 
+    to_user = relationship('User', foreign_keys=[to_user_id], backref='likes_received')

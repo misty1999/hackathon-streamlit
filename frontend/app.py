@@ -1,25 +1,18 @@
 import streamlit as st
 from components.utils import init_session_state, setup_page
 from components.auth import login_page, signup_page, logout
-from components.user import display_user_profile, get_recommended_users
-from components.matching import display_matching_sidebar
+from components.notes import render_notes
 
 def main_page():
     """メインページの表示"""
-    st.title(f"ようこそ、{st.session_state.username}さん！(◍•ᴗ•◍)✧*。")
-    
     # サイドバー
     with st.sidebar:
         st.header("メニュー")
         if st.button("ログアウト"):
             logout()
-        display_matching_sidebar()
     
-    # メインコンテンツ
-    st.header("おすすめユーザー")
-    recommended_users = get_recommended_users()
-    for user in recommended_users:
-        display_user_profile(user)
+    st.title(f"ようこそ、{st.session_state.username}さん！(◍•ᴗ•◍)✧*。")
+    render_notes()
 
 def main():
     """メインアプリケーション"""

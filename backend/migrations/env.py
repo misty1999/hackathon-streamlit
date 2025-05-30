@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # モデルをインポート
 from database.models import Base
-from database.database import SQLALCHEMY_DATABASE_URL
+from core.config import SQLALCHEMY_DATABASE_URL
 
 # this is the Alembic Config object
 config = context.config
@@ -56,4 +56,4 @@ def run_migrations_online() -> None:
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    run_migrations_online() 
+    run_migrations_online()

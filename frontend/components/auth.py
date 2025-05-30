@@ -4,7 +4,7 @@ from .utils import API_BASE_URL, get_auth_headers
 
 def login_page():
     """ログインページの表示と処理"""
-    st.title("マッチングアプリへようこそ！(｀・ω・´)")
+    st.title("メモアプリへようこそ！(｀・ω・´)")
     
     with st.form("login_form"):
         email = st.text_input("メールアドレス")
@@ -47,10 +47,6 @@ def signup_page():
         username = st.text_input("ユーザー名")
         email = st.text_input("メールアドレス")
         password = st.text_input("パスワード", type="password")
-        age = st.number_input("年齢", min_value=18, max_value=100)
-        gender = st.selectbox("性別", ["男性", "女性", "その他"])
-        bio = st.text_area("自己紹介")
-        interests = st.text_area("興味のあること（カンマ区切りで入力）")
         
         submitted = st.form_submit_button("登録")
         
@@ -62,10 +58,10 @@ def signup_page():
                         "username": username,
                         "email": email,
                         "password": password,
-                        "age": age,
-                        "gender": gender,
-                        "bio": bio,
-                        "interests": interests
+                        "age": 0,
+                        "gender": "その他",
+                        "bio": "",
+                        "interests": ""
                     }
                 )
                 if response.status_code == 200:

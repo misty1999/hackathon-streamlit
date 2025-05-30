@@ -24,3 +24,11 @@ def setup_page():
         page_icon="💕",
         layout="wide"
     )
+
+def handle_error(message: str, response):
+    """APIエラーの処理と表示"""
+    try:
+        error_detail = response.json().get("detail", "不明なエラー")
+        st.error(f"{message}: {error_detail}")
+    except:
+        st.error(f"{message}: ステータスコード {response.status_code}")

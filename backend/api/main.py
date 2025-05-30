@@ -16,6 +16,7 @@ from api.middleware import log_requests
 from api.auth import router as auth_router
 from api.users import router as users_router
 from api.matching import router as matching_router
+from api.notes import router as notes_router
 
 app = FastAPI(title="マッチングアプリ API")
 
@@ -35,6 +36,7 @@ app.add_middleware(
 app.include_router(auth_router, tags=["認証"])
 app.include_router(users_router, prefix="/users", tags=["ユーザー"])
 app.include_router(matching_router, tags=["マッチング"])
+app.include_router(notes_router, tags=["メモ"])
 
 def init_db():
     """データベースの初期化"""
